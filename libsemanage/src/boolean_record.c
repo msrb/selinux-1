@@ -19,15 +19,21 @@ typedef semanage_bool_key_t record_key_t;
 #include "boolean_internal.h"
 #include "handle.h"
 #include "database.h"
+#include "debug.h"
 #include <stdlib.h>
+#include <string.h>
 #include <selinux/selinux.h>
 
 /* Key */
 int semanage_bool_key_create(semanage_handle_t * handle,
 			     const char *name, semanage_bool_key_t ** key)
 {
-
-	return sepol_bool_key_create(handle->sepolh, name, key);
+	char *name_dup = strdup(name);
+	if (!name_dup) {
+	    ERR(handle, "out of memory, could not create boolean key");
+	    return STATUS_ERR;
+	}
+	return sepol_bool_key_create(handle->sepolh, name_dup, key);
 }
 
 int semanage_bool_key_extract(semanage_handle_t * handle,
@@ -42,6 +48,9 @@ hidden_def(semanage_bool_key_extract)
 
 void semanage_bool_key_free(semanage_bool_key_t * key)
 {
+	char *name;
+	sepol_bool_key_unpack(key, &name);
+	free(name);
 	sepol_bool_key_free(key);
 }
 
